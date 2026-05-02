@@ -239,7 +239,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <>
-                        <MovieCard title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
+                        <MovieCard id={movie.id} title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
                         <button
                           onClick={() => startEditingReview(movie)}
                           className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
@@ -301,7 +301,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <>
-                        <MovieCard title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
+                        <MovieCard id={movie.id} title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
                         <button
                           onClick={() => startEditingReview(movie)}
                           className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
