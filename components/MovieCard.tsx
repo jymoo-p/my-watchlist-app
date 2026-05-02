@@ -14,7 +14,8 @@ const MovieCard: React.FC<MovieCardProps> = ({ title, posterUrl, review, year })
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    import('colorthief').then(({ default: ColorThief }) => {
+    import('colorthief').then((module: any) => {
+      const ColorThief = module.default || module;
       const img = new Image();
       img.crossOrigin = 'Anonymous';
       img.src = posterUrl;
