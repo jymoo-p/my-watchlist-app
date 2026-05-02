@@ -14,17 +14,27 @@ const MovieCard: React.FC<MovieCardProps> = ({ title, posterUrl, review, year })
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    import('colorthief').then((module: any) => {
-      const ColorThief = module.default || module;
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.src = posterUrl;
-      img.onload = () => {
-        const colorThief = new ColorThief();
-        const color = colorThief.getColor(img);
-        setDominantColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
-      };
-    });
+    const extractColor = async () => {
+      try {
+        const module = await import('colorthief');
+        const ColorThief = module.default || module;
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = posterUrl;
+        img.onload = () => {
+          try {
+            const colorThief = new ColorThief();
+            const color = colorThief.getColor(img);
+            setDominantColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+          } catch (e) {
+            console.warn('Color extraction failed:', e);
+          }
+        };
+      } catch (e) {
+        console.warn('ColorThief import failed:', e);
+      }
+    };
+    extractColor();
   }, [posterUrl]);
 
   return (
