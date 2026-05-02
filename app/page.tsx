@@ -10,6 +10,7 @@ interface MovieItem {
   title: string;
   year: number;
   posterUrl: string;
+  review?: string;
 }
 
 const STORAGE_WATCHLIST_KEY = 'minimalist-tracker-watchlist';
@@ -25,6 +26,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [newReleases, setNewReleases] = useState<MovieItem[]>([]);
   const [hasLoadedRemote, setHasLoadedRemote] = useState(false);
+  const [editingMovieId, setEditingMovieId] = useState<number | null>(null);
+  const [editingReview, setEditingReview] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -122,6 +125,23 @@ export default function Home() {
     setWatchList((prev) => [movie, ...prev]);
   };
 
+  const startEditingReview = (movie: MovieItem) => {
+    setEditingMovieId(movie.id);
+    setEditingReview(movie.review || '');
+  };
+
+  const saveReview = (list: MovieItem[], movieId: number) => {
+    const updated = list.map((m) =>
+      m.id === movieId ? { ...m, review: editingReview.slice(0, 140) } : m
+    );
+    if (list === watchList) {
+      setWatchList(updated);
+    } else {
+      setWatchedList(updated);
+    }
+    setEditingMovieId(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8 text-gray-900">
       <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -191,7 +211,43 @@ export default function Home() {
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {watchList.map((movie) => (
                   <div key={movie.id} className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
-                    <MovieCard title={movie.title} posterUrl={movie.posterUrl} review="140 chars pending" year={movie.year} />
+                    {editingMovieId === movie.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editingReview}
+                          onChange={(e) => setEditingReview(e.target.value)}
+                          placeholder="Write a review (max 140 chars)..."
+                          maxLength={140}
+                          className="w-full rounded-2xl border border-gray-200 bg-slate-50 p-3 text-sm outline-none focus:border-black focus:bg-white resize-none"
+                          rows={4}
+                        />
+                        <p className="text-xs text-gray-500">{editingReview.length}/140</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveReview(watchList, movie.id)}
+                            className="flex-1 rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingMovieId(null)}
+                            className="flex-1 rounded-2xl border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-black"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <MovieCard title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
+                        <button
+                          onClick={() => startEditingReview(movie)}
+                          className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
+                        >
+                          {movie.review ? 'Edit Review' : 'Add Review'}
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => markAsWatched(movie)}
                       className="w-full rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
@@ -217,7 +273,43 @@ export default function Home() {
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {watchedList.map((movie) => (
                   <div key={movie.id} className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
-                    <MovieCard title={movie.title} posterUrl={movie.posterUrl} review="140 chars pending" year={movie.year} />
+                    {editingMovieId === movie.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editingReview}
+                          onChange={(e) => setEditingReview(e.target.value)}
+                          placeholder="Write a review (max 140 chars)..."
+                          maxLength={140}
+                          className="w-full rounded-2xl border border-gray-200 bg-slate-50 p-3 text-sm outline-none focus:border-black focus:bg-white resize-none"
+                          rows={4}
+                        />
+                        <p className="text-xs text-gray-500">{editingReview.length}/140</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveReview(watchedList, movie.id)}
+                            className="flex-1 rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingMovieId(null)}
+                            className="flex-1 rounded-2xl border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-black"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <MovieCard title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
+                        <button
+                          onClick={() => startEditingReview(movie)}
+                          className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
+                        >
+                          {movie.review ? 'Edit Review' : 'Add Review'}
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => returnToWatchList(movie)}
                       className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:border-black"
