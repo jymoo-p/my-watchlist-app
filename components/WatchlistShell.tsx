@@ -234,23 +234,36 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
               {isLoading ? (
                 <div className="rounded-3xl border border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-600">Loading films from TMDB…</div>
               ) : suggestions.length > 0 ? (
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {suggestions.map((movie) => (
-                    <li key={movie.id} className="rounded-3xl border border-gray-200 bg-gray-50 p-4 transition hover:border-black/20">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-lg font-semibold">{movie.title}</p>
-                          <p className="text-sm text-gray-500">{movie.year}</p>
+                <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {suggestions.map((movie) => {
+                    const isAlreadyAdded = watchList.some((item) => item.id === movie.id) || watchedList.some((item) => item.id === movie.id);
+                    return (
+                      <li key={movie.id} className="rounded-2xl border border-gray-200 bg-gray-50 p-3 transition hover:border-black/20">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={movie.posterUrl}
+                            alt={movie.title}
+                            className="h-12 w-8 rounded object-cover"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">{movie.title}</p>
+                            <p className="text-xs text-gray-500">{movie.year}</p>
+                          </div>
+                          <button
+                            onClick={() => addToWatchList(movie)}
+                            disabled={isAlreadyAdded}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                              isAlreadyAdded
+                                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                : 'bg-black text-white hover:bg-gray-800'
+                            }`}
+                          >
+                            {isAlreadyAdded ? '✓' : '+'}
+                          </button>
                         </div>
-                        <button
-                          onClick={() => addToWatchList(movie)}
-                          className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
-                        >
-                          Add
-                        </button>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-500">No matching films found yet. Try another title.</div>
