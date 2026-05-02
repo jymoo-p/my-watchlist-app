@@ -136,6 +136,7 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
       setWatchList([]);
       setWatchedList([]);
       setWeeklyPicks([]);
+      setHasLoadedRemote(false);
     }
   }, [user, authLoading]);
 
