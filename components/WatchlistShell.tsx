@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
+import { db, auth } from '../lib/firebase';
+import { useAuth } from '../lib/useAuth';
 import MovieCard from './MovieCard';
 
 interface MovieItem {
@@ -34,6 +36,7 @@ const STORAGE_WEEKLY_PICKS_KEY = 'minimalist-tracker-weekly-picks';
 const WATCHLIST_DOC_ID = 'user-watchlist';
 
 export default function WatchlistShell({ view }: WatchlistShellProps) {
+  const { user, loading: authLoading } = useAuth();
   const [query, setQuery] = useState('');
   const [watchList, setWatchList] = useState<MovieItem[]>([]);
   const [watchedList, setWatchedList] = useState<MovieItem[]>([]);
@@ -45,11 +48,35 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
   const [hasLoadedRemote, setHasLoadedRemote] = useState(false);
   const [editingMovieId, setEditingMovieId] = useState<number | null>(null);
   const [editingReview, setEditingReview] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setAuthError(null);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      setAuthError(error.message || 'Failed to sign in');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setAuthError(null);
+      await signOut(auth);
+    } catch (error: any) {
+      setAuthError(error.message || 'Failed to sign out');
+    }
+  };
 
   useEffect(() => {
+    if (authLoading) return;
+
     const loadData = async () => {
       try {
-        const docRef = doc(db, 'watchlists', WATCHLIST_DOC_ID);
+        // Use user-specific document if logged in, otherwise use shared document
+        const docId = user?.uid || WATCHLIST_DOC_ID;
+        const docRef = doc(db, 'watchlists', docId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -77,17 +104,25 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
       }
     };
     loadData();
-  }, []);
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (!hasLoadedRemote) return;
     const saveData = async () => {
       try {
-        await setDoc(doc(db, 'watchlists', WATCHLIST_DOC_ID), {
-          watchlist: watchList,
-          watched: watchedList,
-          weeklyPicks: weeklyPicks,
-        });
+        // Only save to Firestore if user is logged in
+        if (user) {
+          await setDoc(doc(db, 'watchlists', user.uid), {
+            watchlist: watchList,
+            watched: watchedList,
+            weeklyPicks: weeklyPicks,
+          });
+        } else {
+          // Save to localStorage for anonymous users
+          localStorage.setItem(STORAGE_WATCHLIST_KEY, JSON.stringify(watchList));
+          localStorage.setItem(STORAGE_WATCHED_KEY, JSON.stringify(watchedList));
+          localStorage.setItem(STORAGE_WEEKLY_PICKS_KEY, JSON.stringify(weeklyPicks));
+        }
       } catch (error) {
         console.error('Error saving data:', error);
         localStorage.setItem(STORAGE_WATCHLIST_KEY, JSON.stringify(watchList));
@@ -96,7 +131,7 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
       }
     };
     saveData();
-  }, [watchList, watchedList, weeklyPicks, hasLoadedRemote]);
+  }, [watchList, watchedList, weeklyPicks, hasLoadedRemote, user]);
 
   useEffect(() => {
     fetch('/api/new-releases')
@@ -135,6 +170,10 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
   }, [query]);
 
   const addToWatchList = (movie: MovieItem) => {
+    if (!user) {
+      setAuthError('Please login to add movies to your watchlist');
+      return;
+    }
     if (watchList.some((item) => item.id === movie.id) || watchedList.some((item) => item.id === movie.id)) {
       return;
     }
@@ -143,22 +182,38 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
   };
 
   const markAsWatched = (movie: MovieItem) => {
+    if (!user) {
+      setAuthError('Please login to mark movies as watched');
+      return;
+    }
     setWatchList((prev) => prev.filter((item) => item.id !== movie.id));
     setWatchedList((prev) => [movie, ...prev]);
   };
 
   const returnToWatchList = (movie: MovieItem) => {
+    if (!user) {
+      setAuthError('Please login to modify your watchlist');
+      return;
+    }
     setWatchedList((prev) => prev.filter((item) => item.id !== movie.id));
     setWatchList((prev) => [movie, ...prev]);
   };
 
   const addToWeeklyPicks = (movie: MovieItem) => {
+    if (!user) {
+      setAuthError('Please login to add movies to weekly picks');
+      return;
+    }
     if (weeklyPicks.length >= 2) return; // Limit to 2 movies
     if (weeklyPicks.some((item) => item.id === movie.id)) return;
     setWeeklyPicks((prev) => [...prev, movie]);
   };
 
   const removeFromWeeklyPicks = (movieId: number) => {
+    if (!user) {
+      setAuthError('Please login to modify weekly picks');
+      return;
+    }
     setWeeklyPicks((prev) => prev.filter((item) => item.id !== movieId));
   };
 
@@ -173,6 +228,10 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
   };
 
   const saveReview = (listType: 'watchlist' | 'watched', movieId: number) => {
+    if (!user) {
+      setAuthError('Please login to add reviews');
+      return;
+    }
     const targetList = listType === 'watchlist' ? watchList : watchedList;
     const updated = targetList.map((m) =>
       m.id === movieId ? { ...m, review: editingReview.slice(0, 140) } : m
@@ -200,16 +259,51 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
         <div className="lg:col-span-3 space-y-4 sm:space-y-6 lg:space-y-8">
           <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:justify-between sm:items-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">My Watchlist</h1>
-            <div className="flex items-center gap-1 sm:gap-2 rounded-full border border-gray-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-sm text-sm sm:text-base">
-              <Link href="/watchlist" className={`rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${view === 'watchlist' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
-                Watchlist
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1 sm:gap-2 rounded-full border border-gray-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-sm text-sm sm:text-base">
+                <Link href="/watchlist" className={`rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${view === 'watchlist' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+                  Watchlist
               </Link>
               <Link href="/watched" className={`rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${view === 'watched' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
-                Watched
-              </Link>
+                  Watched
+                </Link>
+              </div>
+              {authLoading ? (
+                <div className="text-xs text-gray-500">Loading...</div>
+              ) : user ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm text-gray-700">{user.displayName || user.email}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="rounded-full bg-black text-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition hover:bg-gray-800"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleGoogleLogin}
+                  className="rounded-full bg-black text-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition hover:bg-gray-800"
+                >
+                  Login with Google
+                </button>
+              )}
             </div>
           </div>
           <p className="hidden sm:block text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.3em] text-gray-600">Curate, search, pin, and mark films with a whisper of color-driven elegance.</p>
+
+          {authError && (
+            <div className="rounded-2xl sm:rounded-3xl border border-red-300 bg-red-50 p-3 sm:p-4 text-xs sm:text-sm text-red-700">
+              {authError}
+            </div>
+          )}
+
+          {!user && !authLoading && (
+            <div className="rounded-2xl sm:rounded-3xl border border-blue-300 bg-blue-50 p-3 sm:p-4 text-xs sm:text-sm text-blue-700">
+              <p className="font-semibold mb-1">You can view films, but need to login to add/edit them.</p>
+              <p>Sign in with Google to save your watchlist across devices.</p>
+            </div>
+          )}
 
           <section className="rounded-2xl sm:rounded-3xl border border-black/10 bg-white/90 p-4 sm:p-6 shadow-xl">
             <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -251,12 +345,13 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                           </div>
                           <button
                             onClick={() => addToWatchList(movie)}
-                            disabled={isAlreadyAdded}
+                            disabled={isAlreadyAdded || !user}
                             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                              isAlreadyAdded
+                              isAlreadyAdded || !user
                                 ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                                 : 'bg-black text-white hover:bg-gray-800'
                             }`}
+                            title={!user ? 'Login to add movies' : isAlreadyAdded ? 'Already added' : 'Add to watchlist'}
                           >
                             {isAlreadyAdded ? '✓' : '+'}
                           </button>
@@ -350,7 +445,8 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                         <MovieCard id={movie.id} title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
                         <button
                           onClick={() => startEditingReview(movie)}
-                          className="w-full rounded-xl sm:rounded-2xl border border-gray-300 bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
+                          disabled={!user}
+                          className="w-full rounded-xl sm:rounded-2xl border border-gray-300 bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-gray-600 transition hover:border-black disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {movie.review ? 'Edit Review' : 'Add Review'}
                         </button>
@@ -361,14 +457,15 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             onClick={() => addToWeeklyPicks(movie)}
-                            disabled={weeklyPicks.length >= 2 || weeklyPicks.some((item) => item.id === movie.id)}
+                            disabled={!user || weeklyPicks.length >= 2 || weeklyPicks.some((item) => item.id === movie.id)}
                             className="rounded-xl sm:rounded-2xl border border-purple-300 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-purple-600 transition hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {weeklyPicks.some((item) => item.id === movie.id) ? 'In Weekly Picks' : 'Add to Week'}
                           </button>
                           <button
                             onClick={() => markAsWatched(movie)}
-                            className="rounded-xl sm:rounded-2xl bg-black px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+                            disabled={!user}
+                            className="rounded-xl sm:rounded-2xl bg-black px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Mark Watched
                           </button>
@@ -377,7 +474,8 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                     ) : (
                       <button
                         onClick={() => returnToWatchList(movie)}
-                        className="w-full rounded-xl sm:rounded-2xl border border-gray-300 bg-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 transition hover:border-black"
+                        disabled={!user}
+                        className="w-full rounded-xl sm:rounded-2xl border border-gray-300 bg-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 transition hover:border-black disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Return to Watchlist
                       </button>
@@ -430,7 +528,8 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                       </div>
                       <button
                         onClick={() => addToWatchList(movie)}
-                        className="text-xs bg-black text-white px-2 py-1 rounded-full hover:bg-gray-800 flex-shrink-0"
+                        disabled={!user}
+                        className="text-xs bg-black text-white px-2 py-1 rounded-full hover:bg-gray-800 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         +
                       </button>
