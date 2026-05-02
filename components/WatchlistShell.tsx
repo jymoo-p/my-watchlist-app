@@ -30,12 +30,14 @@ const LANGUAGE_OPTIONS = [
 
 const STORAGE_WATCHLIST_KEY = 'minimalist-tracker-watchlist';
 const STORAGE_WATCHED_KEY = 'minimalist-tracker-watched';
+const STORAGE_WEEKLY_PICKS_KEY = 'minimalist-tracker-weekly-picks';
 const WATCHLIST_DOC_ID = 'user-watchlist';
 
 export default function WatchlistShell({ view }: WatchlistShellProps) {
   const [query, setQuery] = useState('');
   const [watchList, setWatchList] = useState<MovieItem[]>([]);
   const [watchedList, setWatchedList] = useState<MovieItem[]>([]);
+  const [weeklyPicks, setWeeklyPicks] = useState<MovieItem[]>([]);
   const [suggestions, setSuggestions] = useState<MovieItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newReleases, setNewReleases] = useState<MovieItem[]>([]);
@@ -53,18 +55,23 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
           const data = docSnap.data();
           setWatchList(data.watchlist || []);
           setWatchedList(data.watched || []);
+          setWeeklyPicks(data.weeklyPicks || []);
         } else {
           const persistedWatch = localStorage.getItem(STORAGE_WATCHLIST_KEY);
           const persistedWatched = localStorage.getItem(STORAGE_WATCHED_KEY);
+          const persistedWeekly = localStorage.getItem(STORAGE_WEEKLY_PICKS_KEY);
           if (persistedWatch) setWatchList(JSON.parse(persistedWatch));
           if (persistedWatched) setWatchedList(JSON.parse(persistedWatched));
+          if (persistedWeekly) setWeeklyPicks(JSON.parse(persistedWeekly));
         }
       } catch (error) {
         console.error('Error loading data:', error);
         const persistedWatch = localStorage.getItem(STORAGE_WATCHLIST_KEY);
         const persistedWatched = localStorage.getItem(STORAGE_WATCHED_KEY);
+        const persistedWeekly = localStorage.getItem(STORAGE_WEEKLY_PICKS_KEY);
         if (persistedWatch) setWatchList(JSON.parse(persistedWatch));
         if (persistedWatched) setWatchedList(JSON.parse(persistedWatched));
+        if (persistedWeekly) setWeeklyPicks(JSON.parse(persistedWeekly));
       } finally {
         setHasLoadedRemote(true);
       }
@@ -79,15 +86,17 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
         await setDoc(doc(db, 'watchlists', WATCHLIST_DOC_ID), {
           watchlist: watchList,
           watched: watchedList,
+          weeklyPicks: weeklyPicks,
         });
       } catch (error) {
         console.error('Error saving data:', error);
         localStorage.setItem(STORAGE_WATCHLIST_KEY, JSON.stringify(watchList));
         localStorage.setItem(STORAGE_WATCHED_KEY, JSON.stringify(watchedList));
+        localStorage.setItem(STORAGE_WEEKLY_PICKS_KEY, JSON.stringify(weeklyPicks));
       }
     };
     saveData();
-  }, [watchList, watchedList, hasLoadedRemote]);
+  }, [watchList, watchedList, weeklyPicks, hasLoadedRemote]);
 
   useEffect(() => {
     fetch('/api/new-releases')
@@ -141,6 +150,16 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
   const returnToWatchList = (movie: MovieItem) => {
     setWatchedList((prev) => prev.filter((item) => item.id !== movie.id));
     setWatchList((prev) => [movie, ...prev]);
+  };
+
+  const addToWeeklyPicks = (movie: MovieItem) => {
+    if (weeklyPicks.length >= 2) return; // Limit to 2 movies
+    if (weeklyPicks.some((item) => item.id === movie.id)) return;
+    setWeeklyPicks((prev) => [...prev, movie]);
+  };
+
+  const removeFromWeeklyPicks = (movieId: number) => {
+    setWeeklyPicks((prev) => prev.filter((item) => item.id !== movieId));
   };
 
   const startEditingReview = (movie: MovieItem) => {
@@ -234,6 +253,41 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
             </div>
           </section>
 
+          {view === 'watchlist' && weeklyPicks.length > 0 && (
+            <section className="rounded-3xl border border-black/10 bg-gradient-to-r from-purple-50 to-pink-50 p-6 shadow-xl">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-semibold text-purple-900">Try this week</h2>
+                  <p className="text-sm text-purple-700">Your curated picks for this week's viewing.</p>
+                </div>
+                <div className="text-right text-sm text-purple-600">
+                  <p>{weeklyPicks.length} of 2 selected</p>
+                </div>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2">
+                {weeklyPicks.map((movie) => (
+                  <div key={movie.id} className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
+                    <MovieCard id={movie.id} title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => removeFromWeeklyPicks(movie.id)}
+                        className="flex-1 rounded-2xl border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:border-red-400"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => markAsWatched(movie)}
+                        className="flex-1 rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+                      >
+                        Watched
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="rounded-3xl border border-black/10 bg-white/90 p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
@@ -285,12 +339,23 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                       </>
                     )}
                     {view === 'watchlist' ? (
-                      <button
-                        onClick={() => markAsWatched(movie)}
-                        className="w-full rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
-                      >
-                        Mark as Watched
-                      </button>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => addToWeeklyPicks(movie)}
+                            disabled={weeklyPicks.length >= 2 || weeklyPicks.some((item) => item.id === movie.id)}
+                            className="rounded-2xl border border-purple-300 bg-white px-3 py-2 text-xs font-semibold text-purple-600 transition hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {weeklyPicks.some((item) => item.id === movie.id) ? 'In Weekly Picks' : 'Add to Week'}
+                          </button>
+                          <button
+                            onClick={() => markAsWatched(movie)}
+                            className="rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+                          >
+                            Mark Watched
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <button
                         onClick={() => returnToWatchList(movie)}
