@@ -162,6 +162,11 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
     setWeeklyPicks((prev) => prev.filter((item) => item.id !== movieId));
   };
 
+  const markWeeklyPickAsWatched = (movie: MovieItem) => {
+    markAsWatched(movie);
+    removeFromWeeklyPicks(movie.id);
+  };
+
   const startEditingReview = (movie: MovieItem) => {
     setEditingMovieId(movie.id);
     setEditingReview(movie.review || '');
@@ -276,7 +281,7 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                         Remove
                       </button>
                       <button
-                        onClick={() => markAsWatched(movie)}
+                        onClick={() => markWeeklyPickAsWatched(movie)}
                         className="flex-1 rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
                       >
                         Watched
