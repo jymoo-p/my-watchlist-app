@@ -195,26 +195,26 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
     : 'No watched films yet. Mark a film from the watchlist.';
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 text-gray-900">
-      <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 space-y-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-            <h1 className="text-4xl font-semibold">My Watchlist</h1>
-            <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 shadow-sm">
-              <Link href="/watchlist" className={`rounded-full px-4 py-2 text-sm font-semibold transition ${view === 'watchlist' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 text-gray-900">
+      <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6 lg:space-y-8">
+          <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:justify-between sm:items-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">My Watchlist</h1>
+            <div className="flex items-center gap-1 sm:gap-2 rounded-full border border-gray-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-sm text-sm sm:text-base">
+              <Link href="/watchlist" className={`rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${view === 'watchlist' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
                 Watchlist
               </Link>
-              <Link href="/watched" className={`rounded-full px-4 py-2 text-sm font-semibold transition ${view === 'watched' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+              <Link href="/watched" className={`rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${view === 'watched' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
                 Watched
               </Link>
             </div>
           </div>
-          <p className="text-sm uppercase tracking-[0.3em] text-gray-600">Curate, search, pin, and mark films with a whisper of color-driven elegance.</p>
+          <p className="hidden sm:block text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.3em] text-gray-600">Curate, search, pin, and mark films with a whisper of color-driven elegance.</p>
 
-          <section className="rounded-3xl border border-black/10 bg-white/90 p-6 shadow-xl">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <section className="rounded-2xl sm:rounded-3xl border border-black/10 bg-white/90 p-4 sm:p-6 shadow-xl">
+            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex-1">
-                <label htmlFor="movie-search" className="block text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">Add film to watchlist</label>
+                <label htmlFor="movie-search" className="hidden sm:block text-xs sm:text-sm font-semibold uppercase tracking-[0.1em] sm:tracking-[0.2em] text-gray-500">Add film to watchlist</label>
                 <input
                   id="movie-search"
                   type="text"
@@ -224,13 +224,13 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                   className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-base outline-none transition focus:border-black focus:bg-white"
                 />
               </div>
-              <div className="text-right text-sm text-gray-500">
+              <div className="hidden sm:block text-right text-xs sm:text-sm text-gray-500">
                 <p>Watchlist: {watchList.length}</p>
                 <p>Watched: {watchedList.length}</p>
               </div>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               {isLoading ? (
                 <div className="rounded-3xl border border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-600">Loading films from TMDB…</div>
               ) : suggestions.length > 0 ? (
@@ -272,30 +272,30 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
           </section>
 
           {view === 'watchlist' && weeklyPicks.length > 0 && (
-            <section className="rounded-3xl border border-black/10 bg-gradient-to-r from-purple-50 to-pink-50 p-6 shadow-xl">
-              <div className="mb-4 flex items-center justify-between gap-4">
+            <section className="rounded-2xl sm:rounded-3xl border border-black/10 bg-gradient-to-r from-purple-50 to-pink-50 p-4 sm:p-6 shadow-xl">
+              <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div>
-                  <h2 className="text-2xl font-semibold text-purple-900">Try this week</h2>
-                  <p className="text-sm text-purple-700">Your curated picks for this week's viewing.</p>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-purple-900">Try this week</h2>
+                  <p className="hidden sm:block text-xs sm:text-sm text-purple-700">Your curated picks for this week's viewing.</p>
                 </div>
-                <div className="text-right text-sm text-purple-600">
+                <div className="text-right text-xs sm:text-sm text-purple-600 flex-shrink-0">
                   <p>{weeklyPicks.length} of 2 selected</p>
                 </div>
               </div>
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                 {weeklyPicks.map((movie) => (
-                  <div key={movie.id} className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
+                  <div key={movie.id} className="space-y-3 rounded-2xl sm:rounded-3xl bg-white p-3 sm:p-4 shadow-sm">
                     <MovieCard id={movie.id} title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 text-xs sm:text-sm">
                       <button
                         onClick={() => removeFromWeeklyPicks(movie.id)}
-                        className="flex-1 rounded-2xl border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:border-red-400"
+                        className="flex-1 rounded-xl sm:rounded-2xl border border-red-300 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-red-600 transition hover:border-red-400"
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => markWeeklyPickAsWatched(movie)}
-                        className="flex-1 rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+                        className="flex-1 rounded-xl sm:rounded-2xl bg-black px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
                       >
                         Watched
                       </button>
@@ -306,19 +306,19 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
             </section>
           )}
 
-          <section className="rounded-3xl border border-black/10 bg-white/90 p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between gap-4">
+          <section className="rounded-2xl sm:rounded-3xl border border-black/10 bg-white/90 p-4 sm:p-6 shadow-xl">
+            <div className="mb-3 sm:mb-4 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold">{currentTitle}</h2>
-                <p className="text-sm text-gray-500">{currentSubtitle}</p>
+                <h2 className="text-xl sm:text-2xl font-semibold">{currentTitle}</h2>
+                <p className="hidden sm:block text-xs sm:text-sm text-gray-500">{currentSubtitle}</p>
               </div>
             </div>
             {currentList.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-gray-300 bg-white/90 p-8 text-center text-gray-500">{currentEmpty}</div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {currentList.map((movie) => (
-                  <div key={movie.id} className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
+                  <div key={movie.id} className="space-y-3 rounded-2xl sm:rounded-3xl bg-white p-3 sm:p-4 shadow-sm">
                     {editingMovieId === movie.id ? (
                       <div className="space-y-2">
                         <textarea
@@ -326,20 +326,20 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                           onChange={(e) => setEditingReview(e.target.value)}
                           placeholder="Write a review (max 140 chars)..."
                           maxLength={140}
-                          className="w-full rounded-2xl border border-gray-200 bg-slate-50 p-3 text-sm outline-none focus:border-black focus:bg-white resize-none"
-                          rows={4}
+                          className="w-full rounded-xl sm:rounded-2xl border border-gray-200 bg-slate-50 p-2 sm:p-3 text-xs sm:text-sm outline-none focus:border-black focus:bg-white resize-none"
+                          rows={3}
                         />
                         <p className="text-xs text-gray-500">{editingReview.length}/140</p>
                         <div className="flex gap-2">
                           <button
                             onClick={() => saveReview(view, movie.id)}
-                            className="flex-1 rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+                            className="flex-1 rounded-xl sm:rounded-2xl bg-black px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white hover:bg-gray-800"
                           >
                             Save
                           </button>
                           <button
                             onClick={() => setEditingMovieId(null)}
-                            className="flex-1 rounded-2xl border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-black"
+                            className="flex-1 rounded-xl sm:rounded-2xl border border-gray-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold hover:border-black"
                           >
                             Cancel
                           </button>
@@ -350,7 +350,7 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                         <MovieCard id={movie.id} title={movie.title} posterUrl={movie.posterUrl} review={movie.review || 'Add a review...'} year={movie.year} />
                         <button
                           onClick={() => startEditingReview(movie)}
-                          className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
+                          className="w-full rounded-xl sm:rounded-2xl border border-gray-300 bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-gray-600 transition hover:border-black"
                         >
                           {movie.review ? 'Edit Review' : 'Add Review'}
                         </button>
@@ -362,13 +362,13 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                           <button
                             onClick={() => addToWeeklyPicks(movie)}
                             disabled={weeklyPicks.length >= 2 || weeklyPicks.some((item) => item.id === movie.id)}
-                            className="rounded-2xl border border-purple-300 bg-white px-3 py-2 text-xs font-semibold text-purple-600 transition hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="rounded-xl sm:rounded-2xl border border-purple-300 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-purple-600 transition hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {weeklyPicks.some((item) => item.id === movie.id) ? 'In Weekly Picks' : 'Add to Week'}
                           </button>
                           <button
                             onClick={() => markAsWatched(movie)}
-                            className="rounded-2xl bg-black px-3 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+                            className="rounded-xl sm:rounded-2xl bg-black px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
                           >
                             Mark Watched
                           </button>
@@ -377,7 +377,7 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                     ) : (
                       <button
                         onClick={() => returnToWatchList(movie)}
-                        className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:border-black"
+                        className="w-full rounded-xl sm:rounded-2xl border border-gray-300 bg-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 transition hover:border-black"
                       >
                         Return to Watchlist
                       </button>
@@ -390,13 +390,13 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
         </div>
 
         <aside className="lg:col-span-1">
-          <div className="sticky top-8">
-            <section className="rounded-3xl border border-black/10 bg-white/90 p-6 shadow-xl">
-              <h2 className="text-xl font-semibold mb-4">New Releases</h2>
-              <p className="text-sm text-gray-500 mb-4">Filter by language and discover new films from South Asia.</p>
-              <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="sticky top-4 sm:top-6 lg:top-8">
+            <section className="rounded-2xl sm:rounded-3xl border border-black/10 bg-white/90 p-4 sm:p-6 shadow-xl">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">New Releases</h2>
+              <p className="hidden sm:block text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">Filter by language and discover new films from South Asia.</p>
+              <div className="mb-3 sm:mb-4 grid grid-cols-2 gap-2">
                 {LANGUAGE_OPTIONS.map((option) => (
-                  <label key={option.code} className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 hover:border-black cursor-pointer">
+                  <label key={option.code} className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-200 bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 text-xs text-gray-700 hover:border-black cursor-pointer\">
                     <input
                       type="checkbox"
                       checked={selectedLanguages.includes(option.code)}
@@ -407,30 +407,30 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                             : [...prev, option.code]
                         );
                       }}
-                      className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                      className="h-3 w-3 sm:h-4 sm:w-4 rounded border-gray-300 text-black focus:ring-black\"
                     />
                     {option.label}
                   </label>
                 ))}
               </div>
               {filteredNewReleases.length === 0 ? (
-                <div className="text-center text-sm text-gray-500">No new releases match the selected languages.</div>
+                <div className="text-center text-xs sm:text-sm text-gray-500\">No new releases match the selected languages.</div>
               ) : (
-                <ul className="space-y-4">
+                <ul className=\"space-y-2 sm:space-y-3\">
                   {filteredNewReleases.map((movie) => (
-                    <li key={movie.id} className="flex items-center gap-3">
+                    <li key={movie.id} className=\"flex items-center gap-2 sm:gap-3\">
                       <img
                         src={movie.posterUrl}
                         alt={movie.title}
-                        className="w-12 h-16 object-cover rounded-lg"
+                        className=\"w-10 h-14 sm:w-12 sm:h-16 object-cover rounded\"
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{movie.title}</p>
-                        <p className="text-xs text-gray-500">{movie.year}</p>
+                      <div className=\"flex-1 min-w-0\">
+                        <p className=\"text-xs sm:text-sm font-semibold truncate\">{movie.title}</p>
+                        <p className=\"text-xs text-gray-500\">{movie.year}</p>
                       </div>
                       <button
                         onClick={() => addToWatchList(movie)}
-                        className="text-xs bg-black text-white px-2 py-1 rounded-full hover:bg-gray-800"
+                        className=\"text-xs bg-black text-white px-2 py-1 rounded-full hover:bg-gray-800 flex-shrink-0\"
                       >
                         +
                       </button>
