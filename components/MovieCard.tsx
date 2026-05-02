@@ -16,8 +16,8 @@ const MovieCard: React.FC<MovieCardProps> = ({ title, posterUrl, review, year })
   useEffect(() => {
     const extractColor = async () => {
       try {
-        const module = await import('colorthief');
-        const ColorThief = module.default || module;
+        // @ts-ignore - dynamic import type issue
+        const ColorThief = (await import('colorthief')).default;
         const img = new Image();
         img.crossOrigin = 'Anonymous';
         img.src = posterUrl;
