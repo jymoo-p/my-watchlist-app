@@ -74,16 +74,39 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
 
     const loadData = async () => {
       try {
-        // Use user-specific document if logged in, otherwise use shared document
-        const docId = user?.uid || WATCHLIST_DOC_ID;
-        const docRef = doc(db, 'watchlists', docId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setWatchList(data.watchlist || []);
-          setWatchedList(data.watched || []);
-          setWeeklyPicks(data.weeklyPicks || []);
+        if (user) {
+          // Logged in: load from Firestore
+          const docRef = doc(db, 'watchlists', user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setWatchList(data.watchlist || []);
+            setWatchedList(data.watched || []);
+            setWeeklyPicks(data.weeklyPicks || []);
+          } else {
+            // No Firestore data: migrate from localStorage if available
+            const persistedWatch = localStorage.getItem(STORAGE_WATCHLIST_KEY);
+            const persistedWatched = localStorage.getItem(STORAGE_WATCHED_KEY);
+            const persistedWeekly = localStorage.getItem(STORAGE_WEEKLY_PICKS_KEY);
+            const migratedWatch = persistedWatch ? JSON.parse(persistedWatch) : [];
+            const migratedWatched = persistedWatched ? JSON.parse(persistedWatched) : [];
+            const migratedWeekly = persistedWeekly ? JSON.parse(persistedWeekly) : [];
+            setWatchList(migratedWatch);
+            setWatchedList(migratedWatched);
+            setWeeklyPicks(migratedWeekly);
+            // Save migrated data to Firestore
+            await setDoc(docRef, {
+              watchlist: migratedWatch,
+              watched: migratedWatched,
+              weeklyPicks: migratedWeekly,
+            });
+            // Clear localStorage after migration
+            localStorage.removeItem(STORAGE_WATCHLIST_KEY);
+            localStorage.removeItem(STORAGE_WATCHED_KEY);
+            localStorage.removeItem(STORAGE_WEEKLY_PICKS_KEY);
+          }
         } else {
+          // Not logged in: load from localStorage
           const persistedWatch = localStorage.getItem(STORAGE_WATCHLIST_KEY);
           const persistedWatched = localStorage.getItem(STORAGE_WATCHED_KEY);
           const persistedWeekly = localStorage.getItem(STORAGE_WEEKLY_PICKS_KEY);
@@ -93,6 +116,7 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
         }
       } catch (error) {
         console.error('Error loading data:', error);
+        // Fallback to localStorage
         const persistedWatch = localStorage.getItem(STORAGE_WATCHLIST_KEY);
         const persistedWatched = localStorage.getItem(STORAGE_WATCHED_KEY);
         const persistedWeekly = localStorage.getItem(STORAGE_WEEKLY_PICKS_KEY);
@@ -104,6 +128,15 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
       }
     };
     loadData();
+  }, [user, authLoading]);
+
+  // Clear state when user logs out
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setWatchList([]);
+      setWatchedList([]);
+      setWeeklyPicks([]);
+    }
   }, [user, authLoading]);
 
   useEffect(() => {
