@@ -407,30 +407,30 @@ export default function WatchlistShell({ view }: WatchlistShellProps) {
                             : [...prev, option.code]
                         );
                       }}
-                      className="h-3 w-3 sm:h-4 sm:w-4 rounded border-gray-300 text-black focus:ring-black\"
+                      className="h-3 w-3 sm:h-4 sm:w-4 rounded border-gray-300 text-black focus:ring-black"
                     />
                     {option.label}
                   </label>
                 ))}
               </div>
               {filteredNewReleases.length === 0 ? (
-                <div className="text-center text-xs sm:text-sm text-gray-500\">No new releases match the selected languages.</div>
+                <div className="text-center text-xs sm:text-sm text-gray-500">No new releases match the selected languages.</div>
               ) : (
-                <ul className=\"space-y-2 sm:space-y-3\">
+                <ul className="space-y-2 sm:space-y-3">
                   {filteredNewReleases.map((movie) => (
-                    <li key={movie.id} className=\"flex items-center gap-2 sm:gap-3\">
+                    <li key={movie.id} className="flex items-center gap-2 sm:gap-3">
                       <img
                         src={movie.posterUrl}
                         alt={movie.title}
-                        className=\"w-10 h-14 sm:w-12 sm:h-16 object-cover rounded\"
+                        className="w-10 h-14 sm:w-12 sm:h-16 object-cover rounded"
                       />
-                      <div className=\"flex-1 min-w-0\">
-                        <p className=\"text-xs sm:text-sm font-semibold truncate\">{movie.title}</p>
-                        <p className=\"text-xs text-gray-500\">{movie.year}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold truncate">{movie.title}</p>
+                        <p className="text-xs text-gray-500">{movie.year}</p>
                       </div>
                       <button
                         onClick={() => addToWatchList(movie)}
-                        className=\"text-xs bg-black text-white px-2 py-1 rounded-full hover:bg-gray-800 flex-shrink-0\"
+                        className="text-xs bg-black text-white px-2 py-1 rounded-full hover:bg-gray-800 flex-shrink-0"
                       >
                         +
                       </button>
